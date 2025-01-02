@@ -1,93 +1,14 @@
-from urllib.parse import quote
-
-from flask import Flask, render_template, request, redirect, url_for, flash, make_response, send_file
-from werkzeug.utils import secure_filename
-from markupsafe import escape
-import os
-from pathlib import Path
 import pandas as pd
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.util import Inches, Pt
+# def load_excel_data(excel_file):
+#     # 读取Excel文件
+#     df = pd.read_excel(excel_file)
+#     return df
 
 
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__),'upload/')
-ALLOWED_EXTENSIONS = ['xlsx', 'xls']
-
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World</p>"
-
-
-def show_user_profile():
-    # return f'User {escape(username)}'
-    return render_template('hello.html')
-
-
-def allowed_file(filename):
-    result = Path(filename).suffix.replace('.', '') in ALLOWED_EXTENSIONS
-    print(f"result：{Path(filename).suffix} {result}")
-    return result
-
-
-@app.route('/upload/<filename>', methods=['GET'])
-def file_download(filename):
-    filename=UPLOAD_FOLDER+filename
-    response = make_response(send_file(filename))
-    basename = os.path.basename(filename)
-    response.headers["Content-Disposition"] = \
-        "attachment;" \
-        "filename*=UTF-8''{utf_filename}".format(
-            utf_filename=quote(basename.encode('utf-8'))
-        )
-    return response
-
-
-@app.route('/upload/excel', methods=['GET', 'POST'])
-def upload_file():
-    print(f'test:{request.method}')
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            print(f'file not in {request.files}')
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        print(f'upload filename: {file.filename} type: {Path(file.filename).suffix}')
-        if file.filename == '':
-            print(f'no selected file')
-            flash('No selected file')
-            return redirect(request.url)
-        if allowed_file(file.filename):
-
-            # filename = secure_filename(file.filename)
-            filename = file.filename
-            print(f'folder: {UPLOAD_FOLDER}')
-            print(f'filename: {filename}')
-            excel_file = os.path.join(UPLOAD_FOLDER, filename)
-            excel_path = Path(excel_file)
-            if excel_path.exists():
-                os.remove(excel_file)
-            file.save(excel_file)
-            ppt_file = create_ppt_with_table(excel_file)
-            ppt_file = os.path.basename(ppt_file)
-            return (f'<a href=>首页</a>'
-                    f'</br>'
-                    f'</br>'
-                    f'<a href="{ppt_file}">下载ppt</a>')
-    return render_template('hello.html')
-
-
-
-def create_ppt_with_table(excel_file):
-    base_name, ext = os.path.splitext(excel_file)
-    ppt_file = f'{base_name}.pptx'
-    ppt_path = Path(ppt_file)
-    if ppt_path.exists():
-        os.remove(ppt_file)
+def create_ppt_with_table(excel_file, ppt_file):
     df = pd.read_excel(excel_file)
     # 创建PPT对象
     prs = Presentation()
@@ -153,9 +74,16 @@ def create_ppt_with_table(excel_file):
                         run.font.size = Pt(11)
                         run.font.color.rgb = RGBColor(0, 0, 0)  # 黑色文本
     prs.save(ppt_file)
-    return ppt_file
 
 
 if __name__ == "__main__":
-    excel_file = "upload/批量箱单.xlsx"  # 输入Excel文件路径
-    create_ppt_with_table(excel_file)
+    excel_file = "/Users/lmm/Downloads/批量箱单.xlsx"  # 输入Excel文件路径
+    ppt_file = "/Users/lmm/Downloads/output_ppt_with_table.pptx"  # 输出PPT文件路径
+
+    # 加载Excel数据
+    # df = load_excel_data(excel_file)
+
+    # 创建PPT文件
+    create_ppt_with_table(excel_file, ppt_file)
+
+    print("PPT文件已生成，且包含表格！")
