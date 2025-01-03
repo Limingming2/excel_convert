@@ -81,7 +81,6 @@ def upload_file():
     return render_template('hello.html')
 
 
-
 def create_ppt_with_table(excel_file):
     base_name, ext = os.path.splitext(excel_file)
     ppt_file = f'{base_name}.pptx'
@@ -118,10 +117,10 @@ def create_ppt_with_table(excel_file):
         table.columns[2].width = Inches(5)
         table.columns[3].width = Inches(1)
         for col_num, col_name in enumerate(df_sorted.columns):
-            table.cell(0, col_num).text = col_name  # 表头从第一行开始
+            table.cell(0, col_num).text = f'{col_name}'  # 表头从第一行开始
         for col_index, column_name in enumerate(df.columns):
             cell = table.cell(0, col_index)
-            cell.text = column_name
+            cell.text = f'{column_name}'
             # 设置表头格式
             for paragraph in cell.text_frame.paragraphs:
                 for run in paragraph.runs:
